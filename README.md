@@ -1,3 +1,9 @@
+# NO SAFEGUARDS ARE IMPLEMENTED WITHIN THIS PROTOTYPE
+
+Do not run this prototype in any sort of production environment at this point and risk the security of an account. This application is unfinished and being opened source for educational purposes.
+
+---
+
 Prototype: eosio-cosigner-nodejs
 ====
 
