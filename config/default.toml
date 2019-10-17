@@ -1,0 +1,24 @@
+# default configuration, override in config/local.toml or with env vars
+
+# application name used for logging and service namespace
+name = 'nodejs'
+
+# port to run http server on
+port = 8080
+
+# API server to use
+api = 'https://jungle.greymass.com'
+
+# Cosigner Account Name
+account = 'accountname'
+
+# Cosigner Permission Name (should be a restricted permission in production, to avoid security risks)
+permission = 'permission'
+
+# Cosigner Private WIF Key (example key below)
+privateKey = '5KGs159NcW39npLb1H9tqj7Lu9bRqS25eSZrKkVaEwgHdKR8p4Y'
+
+# logging output, can be repeated
+[[log]]
+level = 'debug'
+out = 'stdout' # path or stdout/err

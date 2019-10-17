@@ -1,0 +1,8 @@
+api = 'API'
+account = 'ACCOUNT'
+permission = 'PERMISSION'
+port = 'PORT'
+privateKey = 'PRIVATEKEY'
+[log]
+__name = 'LOG_STREAMS'
+__format = 'json'
