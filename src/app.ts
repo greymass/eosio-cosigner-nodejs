@@ -17,54 +17,54 @@ const textEncoder = new util.TextEncoder()
 const textDecoder = new util.TextDecoder()
 
 export interface Cosigner {
-        account: string,
-        permission: string,
-        private: string,
-        public: string,
+    account: string,
+    permission: string,
+    private: string,
+    public: string,
 }
 
 let cosigner:Cosigner = {
-        account: config.get('account'),
-        permission: config.get('permission'),
-        private: String(config.get('privateKey')),
-        public: String(ecc.privateToPublic(config.get('privateKey'), 'EOS')),
+    account: config.get('account'),
+    permission: config.get('permission'),
+    private: String(config.get('privateKey')),
+    public: String(ecc.privateToPublic(config.get('privateKey'), 'EOS')),
 }
 
 const signatureProvider = new JsSignatureProvider([cosigner.private])
 const rpc = new JsonRpc(config.get('api'), { fetch })
 const eos = new Api({
-        rpc,
-        signatureProvider,
-        textDecoder,
-        textEncoder,
+    rpc,
+    signatureProvider,
+    textDecoder,
+    textEncoder,
 })
 
 const httpServer = http.createServer(handleRequest)
 
 const signingRequestOpts = {
-      textEncoder,
-      textDecoder,
-      zlib: {
-            deflateRaw: (data: Buffer) => new Uint8Array(zlib.deflateRawSync(Buffer.from(data))),
-            inflateRaw: (data: Buffer) => new Uint8Array(zlib.inflateRawSync(Buffer.from(data))),
-      },
-      abiProvider: {
-            getAbi: async (account: string) => (await rpc.get_abi(account)).abi
-      }
+    textEncoder,
+    textDecoder,
+    zlib: {
+        deflateRaw: (data: Buffer) => new Uint8Array(zlib.deflateRawSync(Buffer.from(data))),
+        inflateRaw: (data: Buffer) => new Uint8Array(zlib.inflateRawSync(Buffer.from(data))),
+    },
+    abiProvider: {
+        getAbi: async (account: string) => (await rpc.get_abi(account)).abi
+    }
 }
 
 export interface SigningRequestCallback {
-        a: string,
-        bn: string,
-        sig: string,
-        t: string,
-        tx: string,
+    a: string,
+    bn: string,
+    sig: string,
+    t: string,
+    tx: string,
 }
 
 async function handlePost(request: http.IncomingMessage, response: http.ServerResponse) {
-        // Parse Request
+    // Parse Request
     const data = await readBody(request)
-        // Recreate transaction from signing request
+    // Recreate transaction from signing request
     const req = SigningRequest.from(data.t, signingRequestOpts)
     const incomingTransaction = await req.getTransaction(`${cosigner.account}@${cosigner.permission}`)
     // Retrieve Chain ID
@@ -73,8 +73,8 @@ async function handlePost(request: http.IncomingMessage, response: http.ServerRe
     const abis = await eos.getTransactionAbis(incomingTransaction)
     // Create copy of the transaction with the serialized actions
     const serializedActionsTransaction = {
-            ...incomingTransaction,
-            actions: await eos.serializeActions(incomingTransaction.actions)
+        ...incomingTransaction,
+        actions: await eos.serializeActions(incomingTransaction.actions)
     }
     // Serialize the entire transaction
     const serializedTransaction = eos.serializeTransaction(serializedActionsTransaction)
@@ -82,20 +82,20 @@ async function handlePost(request: http.IncomingMessage, response: http.ServerRe
     const availableKeys = await eos.signatureProvider.getAvailableKeys()
     // Create a signature for the cosigner
     const cosignerTransaction = await eos.signatureProvider.sign({
-            abis,
-            chainId,
-            // Bypass eosjs restrictions by tricking it into thinking
-            // the public key provided is the only one required.
-            requiredKeys: [cosigner.public],
-            serializedTransaction,
+        abis,
+        chainId,
+        // Bypass eosjs restrictions by tricking it into thinking
+        // the public key provided is the only one required.
+        requiredKeys: [cosigner.public],
+        serializedTransaction,
     })
     // Combine signatures with the serialized transaction
     const combinedTransactionArgs = {
-            serializedTransaction,
-            signatures: [
-                    data.sig,
-                    ...cosignerTransaction.signatures,
-            ]
+        serializedTransaction,
+        signatures: [
+            data.sig,
+            ...cosignerTransaction.signatures,
+        ]
     }
     // Push transaction
     const pushResponse = eos.pushSignedTransaction(combinedTransactionArgs)
