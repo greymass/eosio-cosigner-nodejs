@@ -66,40 +66,40 @@ async function handlePost(request: http.IncomingMessage, response: http.ServerRe
     const data = await readBody(request)
         // Recreate transaction from signing request
     const req = SigningRequest.from(data.t, signingRequestOpts)
-        const incomingTransaction = await req.getTransaction(`${cosigner.account}@${cosigner.permission}`)
-        // Retrieve Chain ID
-        const chainId = req.getChainId()
-        // Retrieve ABIs
-        const abis = await eos.getTransactionAbis(incomingTransaction)
-        // Create copy of the transaction with the serialized actions
-        const serializedActionsTransaction = {
-                ...incomingTransaction,
-                actions: await eos.serializeActions(incomingTransaction.actions)
-        }
-        // Serialize the entire transaction
-        const serializedTransaction = eos.serializeTransaction(serializedActionsTransaction)
-        // Retrieve available keys from signature provider
-        const availableKeys = await eos.signatureProvider.getAvailableKeys()
-        // Create a signature for the cosigner
-        const cosignerTransaction = await eos.signatureProvider.sign({
-                abis,
-                chainId,
-                // Bypass eosjs restrictions by tricking it into thinking
-                // the public key provided is the only one required.
-                requiredKeys: [cosigner.public],
-                serializedTransaction,
-        })
-        // Combine signatures with the serialized transaction
-        const combinedTransactionArgs = {
-                serializedTransaction,
-                signatures: [
-                        data.sig,
-                        ...cosignerTransaction.signatures,
-                ]
-        }
-        // Push transaction
-        const pushResponse = eos.pushSignedTransaction(combinedTransactionArgs)
-        logger.info({tx: data.tx}, 'successfully pushed')
+    const incomingTransaction = await req.getTransaction(`${cosigner.account}@${cosigner.permission}`)
+    // Retrieve Chain ID
+    const chainId = req.getChainId()
+    // Retrieve ABIs
+    const abis = await eos.getTransactionAbis(incomingTransaction)
+    // Create copy of the transaction with the serialized actions
+    const serializedActionsTransaction = {
+            ...incomingTransaction,
+            actions: await eos.serializeActions(incomingTransaction.actions)
+    }
+    // Serialize the entire transaction
+    const serializedTransaction = eos.serializeTransaction(serializedActionsTransaction)
+    // Retrieve available keys from signature provider
+    const availableKeys = await eos.signatureProvider.getAvailableKeys()
+    // Create a signature for the cosigner
+    const cosignerTransaction = await eos.signatureProvider.sign({
+            abis,
+            chainId,
+            // Bypass eosjs restrictions by tricking it into thinking
+            // the public key provided is the only one required.
+            requiredKeys: [cosigner.public],
+            serializedTransaction,
+    })
+    // Combine signatures with the serialized transaction
+    const combinedTransactionArgs = {
+            serializedTransaction,
+            signatures: [
+                    data.sig,
+                    ...cosignerTransaction.signatures,
+            ]
+    }
+    // Push transaction
+    const pushResponse = eos.pushSignedTransaction(combinedTransactionArgs)
+    logger.info({tx: data.tx}, 'successfully pushed')
 }
 
 function readBody(request: http.IncomingMessage) {
